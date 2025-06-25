@@ -54,9 +54,9 @@ def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
                 else:
                     client_socket.send(b"OK")
                     print("✅ Hasło poprawne.")
-                    if client_address  not in authorized_clients:
-                        unauthorized_clients.remove(client_address)
-                        authorized_clients.append(client_address)
+                    if client_socket not in authorized_clients:
+                        unauthorized_clients.remove(client_socket)
+                        authorized_clients.append(client_socket)
         while True:
             
             # Odbiór rozmiaru i nazwy pliku
@@ -99,10 +99,11 @@ def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
                         break
                     f.write(data)
                     received += len(data)
-                while i < 3:
+
+                for i in range(3):
                     time.sleep(2)
                     print(f"pobieranie danych...{chunk_size}")
-                    i += 1
+
             print(f"✅ Plik {filename} zapisany.")
 
     except Exception as e:
@@ -115,7 +116,7 @@ def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
 
         if client_socket in authorized_clients:
             authorized_clients.remove(client_socket)
-        if client_address in unauthorized_clients:
+        if client_socket in unauthorized_clients:
             unauthorized_clients.remove(client_socket)
 
 # Oczekiwanie na połączenie z nowym klientem
@@ -123,4 +124,4 @@ while True:
     client_socket, client_address = server_socket.accept()
     unauthorized_clients.append(client_socket)
     print(f"🔗 Połączono z {client_address}")
-    threading.Thread(target=handle_client, args=(client_socket, client_address)).start()
+    threading.Thread(target=handle_client, args=(client_socket, client_address, password, MAX_SIZE, hash_file)).start()
