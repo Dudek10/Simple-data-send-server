@@ -9,18 +9,17 @@ PORT = 5000
 allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'txt'}
 
 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-socket.connect((HOST, PORT))
+socket_client.connect((HOST, PORT))
 
-#utworzenie hasła
-valid_password = input(" Utwórz hasło: ").strip()
-hashed_password = hashlib.sha256(valid_password.encode()).digest()
-socket_client.send(hashed_password)
 
 try:
     while True:
         password = input("🔑 Podaj hasło dostępu: ").strip()
         password_hash = hashlib.sha256(password.encode()).digest()
-        if password_hash != hashed_password:
+        socket_client.send(password_hash)
+
+        response = socket_client.recv(4)
+        if response != b"OK": 
             print("❌ Błędne hasło. Zamykam sesje")
             break
 
@@ -44,9 +43,9 @@ try:
 
         #wysyłanie rozmiaru pliku do serwera
         filesize = os.path.getsize(pathname)
-            time.sleep(2)
-            print(f"wysyłanie danych...{filesize}")
-            time.sleep(2)
+        time.sleep(2)
+        print(f"wysyłanie danych...{filesize}")
+        time.sleep(2)
         socket_client.send(struct.pack('!Q', filesize))
 
         with open(pathname, 'rb') as f:
