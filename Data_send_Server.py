@@ -29,7 +29,7 @@ password = hashlib.sha256(server_password.encode()).digest()
 hash_file = "server_hash.txt"
 MAX_SIZE = 10 * 1024 * 1024 
 
-def handle_client(client_socket, client_address, received_hash, hash_file):
+def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
     try:
         # Odbiór hasła
         password_hash = client_socket.recv(32)
@@ -70,7 +70,7 @@ def handle_client(client_socket, client_address, received_hash, hash_file):
             if not length_bytes:
                 print(f"Klient {client_address} rozłączył się podczas odbioru rozmiaru pliku.")
                 break
-                
+
             file_size = struct.unpack('!Q', length_bytes)[0] 
             if file_size > MAX_SIZE:
                 print("❌ Plik jest za duży (maks. 10MB)")
