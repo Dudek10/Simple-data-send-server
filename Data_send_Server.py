@@ -2,12 +2,18 @@ import socket
 import threading
 import struct
 import os
+import hashlib
+import mimetypes    
 
+#stworzenie nowego folderu do przechowywania odebranych plików
 if not os.path.exists("received"):
     os.makedirs("received", exist_ok=True)
 
 HOST = '192.168.0.15'
 PORT = 5000
+
+allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'txt'}
+
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((HOST, PORT))
@@ -15,9 +21,29 @@ server_socket.listen()
 print(f"🟢 Serwer działa na http://{HOST}:{PORT}")
 clients = []
 
-def handle_client(client_socket, client_address):
+received_hash = client_socket.recv(32)
+hash_file = "server_hash.txt"
+MAX_SIZE = 10 * 1024 * 1024 
+
+def handle_client(client_socket, client_address, received_hash, hash_file):
     try:
+        # Odbiór hasła
+        if not os.path.exists(hash_file):
+            with open(hash_file, 'wb') as f:
+                f.write(received_hash)
+                print("🔐 Nowe hasło zapisane pomyślnie")
+        else:
+            with open(hash_file, 'rb') as f:
+                server_hash = f.read()
+                if server_hash!= received_hash:
+                    print(f" Hasło nie jest zgodne. Zamykam połączenie z {client_address}")
+                    client_socket.close()
+                    return
+                else:
+                    print("✅ Hasło poprawne.")
         while True:
+            
+            # Odbiór rozmiaru i nazwy pliku
             filename_bytes = client_socket.recv(1024)
             if not filename_bytes:
                 print(f"Klient {client_address} rozłączył się.")
@@ -29,12 +55,24 @@ def handle_client(client_socket, client_address):
                 print(f"Klient {client_address} rozłączył się podczas odbioru rozmiaru pliku.")
                 break
             file_size = struct.unpack('!Q', length_bytes)[0] 
+            if file_size > MAX_SIZE:
+                print("❌ Plik jest za duży (maks. 10MB)")
+                continue
 
             print(f"📁 Otrzymano plik: {filename} o rozmiarze {file_size} bajtów")
 
             received = 0
             filename = os.path.basename(filename) # automatyczny zapis do folderu 'received'
             filepath = os.path.join("received", filename)
+
+            # Sprawdzenie formatu rozszerzenia
+            _, ext = os.path.splitext(filename)
+            ext = ext.lower().lstrip('.')
+            if ext not in allowed_extensions:
+                print(f"Klient podaj zły zły format: {ext}")
+                continue
+
+            #wysyłanie dokładnego rozmiaru pliku
             with open(filepath, 'wb') as f:
                 while received < file_size:
                     chunk_size = min(1024, file_size - received)
@@ -50,9 +88,13 @@ def handle_client(client_socket, client_address):
     except Exception as e:
         print(f"Błąd podczas obsługi klienta {client_address}: {e}")
 
+    # Zakończenie programu
     finally:
         client_socket.close()
         print(f"Połączenie z {client_address} zakończone.")
+        clients.remove(client_socket)
+
+# Oczekiwanie na połączenie z nowym klientem
 while True:
     client_socket, client_address = server_socket.accept()
     clients.append(client_socket)
