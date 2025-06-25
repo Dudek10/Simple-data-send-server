@@ -2,9 +2,8 @@ import socket
 import threading
 import struct
 import os
-import hashlib
-import mimetypes    
-
+import hashlib   
+import time
 #stworzenie nowego folderu do przechowywania odebranych plików
 if not os.path.exists("received"):
     os.makedirs("received", exist_ok=True)
@@ -21,7 +20,6 @@ server_socket.listen()
 print(f"🟢 Serwer działa na http://{HOST}:{PORT}")
 clients = []
 
-received_hash = client_socket.recv(32)
 hash_file = "server_hash.txt"
 MAX_SIZE = 10 * 1024 * 1024 
 
@@ -69,7 +67,7 @@ def handle_client(client_socket, client_address, received_hash, hash_file):
             _, ext = os.path.splitext(filename)
             ext = ext.lower().lstrip('.')
             if ext not in allowed_extensions:
-                print(f"Klient podaj zły zły format: {ext}")
+                print(f"Klient podaj zły format: {ext}")
                 continue
 
             #wysyłanie dokładnego rozmiaru pliku
@@ -82,7 +80,10 @@ def handle_client(client_socket, client_address, received_hash, hash_file):
                         break
                     f.write(data)
                     received += len(data)
-
+                while i < 3:
+                    time.sleep(2)
+                    print(f"pobieranie danych...{chunk_size}")
+                    i += 1
             print(f"✅ Plik {filename} zapisany.")
 
     except Exception as e:
@@ -99,4 +100,5 @@ while True:
     client_socket, client_address = server_socket.accept()
     clients.append(client_socket)
     print(f"🔗 Połączono z {client_address}")
+    received_hash = client_socket.recv(32)
     threading.Thread(target=handle_client, args=(client_socket, client_address)).start()

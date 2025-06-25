@@ -41,9 +41,12 @@ try:
             print(f"Format .{ext} nie jest obsługiwany. dozwolone rozszerzenia: {allowed_extensions}")
             continue
         socket_client.send(filename.encode())
-        
+
         #wysyłanie rozmiaru pliku do serwera
         filesize = os.path.getsize(pathname)
+            time.sleep(2)
+            print(f"wysyłanie danych...{filesize}")
+            time.sleep(2)
         socket_client.send(struct.pack('!Q', filesize))
 
         with open(pathname, 'rb') as f:
