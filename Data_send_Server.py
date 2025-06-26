@@ -116,10 +116,10 @@ unauthorized_clients = []
 authorized_clients = []
 
 server_password = input(" Utwórz hasło: ").strip()
-password = hashlib.sha256(server_password.encode()).digest()
+password = hashlib.sha512(server_password.encode()).digest()
 
 hash_file = "server_hash.txt"
-MAX_SIZE = 10 * 1024 * 1024 
+MAX_SIZE = 10485760
 
 # Oczekiwanie na połączenie z nowym klientem
 while True:

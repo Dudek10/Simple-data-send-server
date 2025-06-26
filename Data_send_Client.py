@@ -14,7 +14,7 @@ socket_client.connect((HOST, PORT))
 try:
     while True:
         password = input("🔑 Podaj hasło dostępu: ").strip()
-        password_hash = hashlib.sha256(password.encode()).digest()
+        password_hash = hashlib.sha512(password.encode()).digest()
         socket_client.send(password_hash)
 
         response = socket_client.recv(4)
