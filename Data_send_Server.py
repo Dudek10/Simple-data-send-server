@@ -2,13 +2,13 @@ import socket
 import threading
 import struct
 import os
-import hashlib   
+import hashlib
 import time
 #stworzenie nowego folderu do przechowywania odebranych plików
 if not os.path.exists("received"):
     os.makedirs("received", exist_ok=True)
 
-HOST = '192.168.0.15'
+HOST = '127.0.0.1'
 PORT = 5000
 
 allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'txt'}
@@ -58,7 +58,7 @@ def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
                         unauthorized_clients.remove(client_socket)
                         authorized_clients.append(client_socket)
         while True:
-            
+
             # Odbiór rozmiaru i nazwy pliku
             filename_bytes = client_socket.recv(1024)
             if not filename_bytes:

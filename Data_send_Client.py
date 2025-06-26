@@ -3,7 +3,7 @@ import os
 import struct
 import hashlib
 
-HOST = '192.168.0.15'
+HOST = '127.0.0.1'
 PORT = 5000
 
 allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'txt'}
@@ -35,7 +35,7 @@ try:
         filename = os.path.basename(pathname)
         _, ext = os.path.splitext(filename)
         ext = ext.lower().lstrip('.')
-    
+
         if ext not in allowed_extensions:
             print(f"Format .{ext} nie jest obsługiwany. dozwolone rozszerzenia: {allowed_extensions}")
             continue
@@ -54,9 +54,7 @@ try:
                 if not data:
                     break
                 socket_client.send(data)
-            
+
         print(f"Plik {filename} został wysłany.")
 finally:
     socket_client.close()
-
-                
