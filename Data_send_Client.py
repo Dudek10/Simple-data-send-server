@@ -11,7 +11,6 @@ allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'txt'}
 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_client.connect((HOST, PORT))
 
-
 try:
     while True:
         password = input("🔑 Podaj hasło dostępu: ").strip()

@@ -4,30 +4,10 @@ import struct
 import os
 import hashlib
 import time
-#stworzenie nowego folderu do przechowywania odebranych plików
-if not os.path.exists("received"):
-    os.makedirs("received", exist_ok=True)
 
 HOST = '127.0.0.1'
 PORT = 5000
 
-allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'txt'}
-
-
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind((HOST, PORT))
-server_socket.listen()
-print(f"🟢 Serwer działa na http://{HOST}:{PORT}")
-
-# lista do przechowywania nieautoryzowanych i autoryzowanych klientów
-unauthorized_clients = []
-authorized_clients = []
-
-server_password = input(" Utwórz hasło: ").strip()
-password = hashlib.sha256(server_password.encode()).digest()
-
-hash_file = "server_hash.txt"
-MAX_SIZE = 10 * 1024 * 1024 
 
 def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
     try:
@@ -118,6 +98,28 @@ def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
             authorized_clients.remove(client_socket)
         if client_socket in unauthorized_clients:
             unauthorized_clients.remove(client_socket)
+
+
+#stworzenie nowego folderu do przechowywania odebranych plików
+if not os.path.exists("received"):
+    os.makedirs("received", exist_ok=True)
+
+allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'txt'}
+
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind((HOST, PORT))
+server_socket.listen()
+print(f"🟢 Serwer działa na http://{HOST}:{PORT}")
+
+# lista do przechowywania nieautoryzowanych i autoryzowanych klientów
+unauthorized_clients = []
+authorized_clients = []
+
+server_password = input(" Utwórz hasło: ").strip()
+password = hashlib.sha256(server_password.encode()).digest()
+
+hash_file = "server_hash.txt"
+MAX_SIZE = 10 * 1024 * 1024 
 
 # Oczekiwanie na połączenie z nowym klientem
 while True:
