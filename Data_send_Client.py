@@ -5,6 +5,7 @@ import hashlib
 
 HOST = '127.0.0.1'
 PORT = 5000
+MAX_SIZE = 10485760
 ALLOWED_EXT = {'jpg', 'jpeg', 'png', 'gif', 'txt'}
 
 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -40,9 +41,14 @@ try:
             continue
         socket_client.send(filename.encode())
 
-        #wysyłanie rozmiaru pliku do serwera
         filesize = os.path.getsize(pathname)
-        print(f"wysyłanie danych...{filesize}")
+
+        if file_size > MAX_SIZE:
+            print("Plik jest za duży. Maksymalny rozmiar to 10MiB")
+            continue
+        
+        #wysyłanie rozmiaru pliku do serwera
+        print(f"Wysyłanie danych...{filesize}")
         socket_client.send(struct.pack('!Q', filesize))
 
         with open(pathname, 'rb') as f:
