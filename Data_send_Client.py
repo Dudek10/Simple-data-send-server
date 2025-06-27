@@ -43,7 +43,7 @@ try:
 
         filesize = os.path.getsize(pathname)
 
-        if file_size > MAX_SIZE:
+        if filesize > MAX_SIZE:
             print("Plik jest za duży. Maksymalny rozmiar to 10MiB")
             continue
         
