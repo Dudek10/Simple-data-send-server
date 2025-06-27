@@ -2,63 +2,35 @@ import socket
 import threading
 import struct
 import os
-import hashlib   
+import hashlib
 import time
-#stworzenie nowego folderu do przechowywania odebranych plików
-if not os.path.exists("received"):
-    os.makedirs("received", exist_ok=True)
 
-HOST = '192.168.0.15'
+HOST = '127.0.0.1'
 PORT = 5000
+MAX_SIZE = 10485760
+HASH_FILE = "server_hash.txt"
+ALLOWED_EXT = {'jpg', 'jpeg', 'png', 'gif', 'txt'}
 
-allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'txt'}
 
-
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind((HOST, PORT))
-server_socket.listen()
-print(f"🟢 Serwer działa na http://{HOST}:{PORT}")
-
-# lista do przechowywania nieautoryzowanych i autoryzowanych klientów
-unauthorized_clients = []
-authorized_clients = []
-
-server_password = input(" Utwórz hasło: ").strip()
-password = hashlib.sha256(server_password.encode()).digest()
-
-hash_file = "server_hash.txt"
-MAX_SIZE = 10 * 1024 * 1024 
-
-def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
+def handle_client(client_socket, client_address, password, max_size, hash_file):
     try:
         # Odbiór hasła
-        password_hash = client_socket.recv(32)
+        password_hash = client_socket.recv(64)
         if password_hash == b'':
             print(f"Klient {client_address} nie podał hasła.")
             client_socket.close()
             return
-
-        if not os.path.exists(hash_file):
-            with open(hash_file, 'wb') as f:
-                f.write(password)
-                print("🔐 Nowe hasło zapisane pomyślnie")
         else:
-            with open(hash_file, 'rb') as f:
-                server_hash = f.read()
-                if password_hash != password:
-                    print(f" Hasło nie jest zgodne. Zamykam połączenie z {client_address}")
-                    client_socket.close()
-                    if client_socket in unauthorized_clients:
-                        unauthorized_clients.remove(client_socket)
-                    return
-                else:
-                    client_socket.send(b"OK")
-                    print("✅ Hasło poprawne.")
-                    if client_socket not in authorized_clients:
-                        unauthorized_clients.remove(client_socket)
-                        authorized_clients.append(client_socket)
+            if password_hash != password:
+                print(f"Hasło nie jest zgodne. Zamykam połączenie z {client_address}")
+                return
+            else:
+                client_socket.send(b"OK")
+                print("✅ Hasło poprawne.")
+                if client_socket not in authorized_clients:
+                    unauthorized_clients.remove(client_socket)
+                    authorized_clients.append(client_socket)
         while True:
-            
             # Odbiór rozmiaru i nazwy pliku
             filename_bytes = client_socket.recv(1024)
             if not filename_bytes:
@@ -72,7 +44,7 @@ def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
                 break
 
             file_size = struct.unpack('!Q', length_bytes)[0] 
-            if file_size > MAX_SIZE:
+            if file_size > max_size:
                 print("❌ Plik jest za duży (maks. 10MB)")
                 continue
 
@@ -85,7 +57,7 @@ def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
             # Sprawdzenie formatu rozszerzenia
             _, ext = os.path.splitext(filename)
             ext = ext.lower().lstrip('.')
-            if ext not in allowed_extensions:
+            if ext not in ALLOWED_EXT:
                 print(f"Klient podaj zły format: {ext}")
                 continue
 
@@ -102,7 +74,7 @@ def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
 
                 for i in range(3):
                     time.sleep(2)
-                    print(f"pobieranie danych...{chunk_size}")
+                    print(f"Pobieranie danych...{received / file_size}")
 
             print(f"✅ Plik {filename} zapisany.")
 
@@ -116,12 +88,37 @@ def handle_client(client_socket, client_address, password, MAX_SIZE, hash_file):
 
         if client_socket in authorized_clients:
             authorized_clients.remove(client_socket)
-        if client_socket in unauthorized_clients:
+        elif client_socket in unauthorized_clients:
             unauthorized_clients.remove(client_socket)
+
+
+if not os.path.exists(HASH_FILE):
+    password = input("Utwórz hasło: ").strip()
+    password_hash = hashlib.sha512(password.encode()).digest()
+
+    with open(HASH_FILE, 'wb') as f:
+        f.write(password_hash)
+        print("🔐 Nowe hasło zapisane pomyślnie")
+else:
+    with open(HASH_FILE, 'rb') as f:
+        password_hash = f.read()
+
+#stworzenie nowego folderu do przechowywania odebranych plików
+if not os.path.exists("received"):
+    os.makedirs("received", exist_ok=True)
+
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind((HOST, PORT))
+server_socket.listen()
+print(f"🟢 Serwer działa na http://{HOST}:{PORT}")
+
+# lista do przechowywania nieautoryzowanych i autoryzowanych klientów
+unauthorized_clients = []
+authorized_clients = []
 
 # Oczekiwanie na połączenie z nowym klientem
 while True:
     client_socket, client_address = server_socket.accept()
     unauthorized_clients.append(client_socket)
     print(f"🔗 Połączono z {client_address}")
-    threading.Thread(target=handle_client, args=(client_socket, client_address, password, MAX_SIZE, hash_file)).start()
+    threading.Thread(target=handle_client, args=(client_socket, client_address, password_hash, MAX_SIZE, HASH_FILE)).start()
