@@ -19,15 +19,16 @@ def handle_client(client_socket, client_address, password, max_size, hash_file):
         password_hash = client_socket.recv(64)
         if password_hash == b'':
             print(f"Klient {client_address} nie podał hasła.")
+            client_socket.send(b"PASSWORD_NOT_PROVIDED")
             client_socket.close()
             return
         else:
             if password_hash != password:
-                print(f"Hasło nie jest zgodne. Zamykam połączenie z {client_address}")
+                print(f"Hasło nie jest zgodne u klienta: {client_address}")
                 return
             else:
                 client_socket.send(b"OK")
-                print("✅ Hasło poprawne.")
+                print(f"✅ Klient: {client_address} wpisał poprawne Hasło")
                 if client_socket not in authorized_clients:
                     unauthorized_clients.remove(client_socket)
                     authorized_clients.append(client_socket)
@@ -79,6 +80,8 @@ def handle_client(client_socket, client_address, password, max_size, hash_file):
 
             print(f"✅ Plik {filename} zapisany.")
             #Wysylanie wiadomosci o zakończeniu pobierania
+            client_socket.send(b"File_received\n")
+
     except Exception as e:
         print(f"Błąd podczas obsługi klienta {client_address}: {e}")
 
