@@ -1,3 +1,4 @@
+
 import socket
 import threading
 import struct
@@ -77,7 +78,7 @@ def handle_client(client_socket, client_address, password, max_size, hash_file):
                     print(f"Pobieranie danych...{received / file_size}")
 
             print(f"✅ Plik {filename} zapisany.")
-
+            #Wysylanie wiadomosci o zakończeniu pobierania
     except Exception as e:
         print(f"Błąd podczas obsługi klienta {client_address}: {e}")
 

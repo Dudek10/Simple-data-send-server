@@ -1,3 +1,4 @@
+
 import socket
 import os
 import struct
@@ -11,15 +12,23 @@ ALLOWED_EXT = {'jpg', 'jpeg', 'png', 'gif', 'txt'}
 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_client.connect((HOST, PORT))
 
-password = input("🔑 Podaj hasło dostępu: ").strip()
-password_hash = hashlib.sha512(password.encode()).digest()
-socket_client.send(password_hash)
-
-response = socket_client.recv(4)
-if response != b"OK": 
-    print("❌ Błędne hasło. Zamykam sesje")
-    socket_client.close()
-    quit()
+i = 0
+while i < 3:
+    password = input("🔑 Podaj hasło dostępu: ").strip()
+    password_hash = hashlib.sha512(password.encode()).digest()
+    socket_client.send(password_hash)
+    response = socket_client.recv(4)
+    if response == b"OK":
+        print(" Hasło poprawne.")
+        break
+    else:
+        print("❌ Błędne hasło. Sprbuj ponownie.")
+        i += 1
+    if i == 3:
+        print("zbyt wiele prób wpisania hasła! koncze sesje")
+        socket_client.close()
+        quit()
+    
 
 try:
     while True:
@@ -48,7 +57,10 @@ try:
             continue
         
         #wysyłanie rozmiaru pliku do serwera
-        print(f"Wysyłanie danych...{filesize}")
+
+
+        print(f"Wysyłanie danych... {filesize} bajtów")
+
         socket_client.send(struct.pack('!Q', filesize))
 
         with open(pathname, 'rb') as f:
