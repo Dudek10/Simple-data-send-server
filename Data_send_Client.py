@@ -30,7 +30,7 @@ while i < 3:
     if response == b"OK":
         print("✅ Hasło poprawne.\n")
         break
-    elif response == b'password_NOT_PROVIDED':
+    elif response == b'PASSWORD_NOT_PROVIDED':
         print("Klient nie podał hasła.\n")
         time.sleep(3)
         socket_client.close()
@@ -39,7 +39,7 @@ while i < 3:
         print("❌ Błędne hasło. Spróbuj ponownie.\n")
         i += 1
     if i == 3:
-        print("zbyt wiele prób wpisania hasła! kończe sesje")
+        print("Zbyt wiele prób wpisania hasła! Kończę sesję")
         time.sleep(3)
         socket_client.close()
         quit()
