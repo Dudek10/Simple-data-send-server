@@ -1,4 +1,3 @@
-
 import socket
 import threading
 import struct
@@ -17,21 +16,20 @@ def handle_client(client_socket, client_address, password, max_size, hash_file):
     try:
         # Odbiór hasła
         password_hash = client_socket.recv(64)
-        if password_hash == b'':
+        if password_hash == hashlib.sha512(b'').digest():
             print(f"Klient {client_address} nie podał hasła.")
             client_socket.send(b"PASSWORD_NOT_PROVIDED")
-            client_socket.close()
+            return
+        elif password_hash != password:
+            print(f"Hasło nie jest zgodne u klienta: {client_address}")
+            client_socket.send(b"WRONG_PASSWORD")
             return
         else:
-            if password_hash != password:
-                print(f"Hasło nie jest zgodne u klienta: {client_address}")
-                return
-            else:
-                client_socket.send(b"OK")
-                print(f"✅ Klient: {client_address} wpisał poprawne Hasło")
-                if client_socket not in authorized_clients:
-                    unauthorized_clients.remove(client_socket)
-                    authorized_clients.append(client_socket)
+            client_socket.send(b"OK")
+            print(f"✅ Klient: {client_address} wpisał poprawne Hasło")
+            if client_socket not in authorized_clients:
+                unauthorized_clients.remove(client_socket)
+                authorized_clients.append(client_socket)
         while True:
             # Odbiór rozmiaru i nazwy pliku
             filename_bytes = client_socket.recv(1024)

@@ -18,11 +18,11 @@ def recv_until_newline(sock):
         data += part
     return data.strip()
 
-socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-socket_client.connect((HOST, PORT))
-
 i = 0
 while i < 3:
+    socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    socket_client.connect((HOST, PORT))
+
     password = input("🔑 Podaj hasło dostępu: ").strip()
     password_hash = hashlib.sha512(password.encode()).digest()
     socket_client.send(password_hash)
@@ -30,7 +30,7 @@ while i < 3:
     if response == b"OK":
         print("✅ Hasło poprawne.\n")
         break
-    elif response == b'password_NOT_PROVIDED':
+    elif response == b'PASSWORD_NOT_PROVIDED':
         print("Klient nie podał hasła.\n")
         time.sleep(3)
         socket_client.close()
@@ -39,11 +39,11 @@ while i < 3:
         print("❌ Błędne hasło. Spróbuj ponownie.\n")
         i += 1
     if i == 3:
-        print("zbyt wiele prób wpisania hasła! kończe sesje")
+        print("Zbyt wiele prób wpisania hasła! Kończę sesję")
         time.sleep(3)
         socket_client.close()
         quit()
-    
+
 try:
     while True:
         pathname = input("Podaj Nazwę *..\\NazwaPliku* lub  bezwzględną ścieżkę pliku do wysłania *C:\\...* (exit by wyjść): ").strip()
@@ -69,7 +69,7 @@ try:
         if filesize > MAX_SIZE:
             print("Plik jest za duży. Maksymalny rozmiar to 10MiB.\n")
             continue
-        
+
         #wysyłanie rozmiaru pliku do serwera
         print(f"Wysyłanie danych... {filesize}B.")
 
@@ -81,7 +81,7 @@ try:
                 if not data:
                     break
                 socket_client.send(data)
-            
+
             DATA = recv_until_newline(socket_client)
             if DATA == b"File_received":
                 print(f"✅ Plik {filename} został wysłany.\n")
