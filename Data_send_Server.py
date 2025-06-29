@@ -19,7 +19,6 @@ def handle_client(client_socket, client_address, password, max_size, hash_file):
         if password_hash == hashlib.sha512(b'').digest():
             print(f"Klient {client_address} nie podał hasła.")
             client_socket.send(b"PASSWORD_NOT_PROVIDED")
-            client_socket.close()
             return
         elif password_hash != password:
             print(f"Hasło nie jest zgodne u klienta: {client_address}")
